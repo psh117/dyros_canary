@@ -5,6 +5,11 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  roslib
+  realtime_tools
+  std_msgs
+  sensor_msgs
+  geometry_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -31,8 +36,14 @@ include_directories(
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
+file(GLOB SRC
+  src/dyros_canary_controller.cpp
+  src/simulation_interface.cpp
+  src/control_base.cpp
+  src/dyros_canary_model.cpp
+)
 
-add_executable(${PROJECT_NAME} src/dyros_canary_controller.cpp)
+add_executable(${PROJECT_NAME} ${SRC})
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
@@ -44,6 +55,10 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
+
+  -L/usr/local/lib
+  -lrbdl
+  -lrbdl_urdfreader
 )
 
 #############

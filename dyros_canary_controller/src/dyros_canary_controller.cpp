@@ -4,8 +4,9 @@
   */
 
 #include <ros/ros.h>
+#include "dyros_canary_controller/simulation_interface.h"
 
-// using namespace dyros_canary_controller;
+using namespace dyros_canary_controller;
 
 
 int main(int argc, char **argv)
@@ -15,7 +16,7 @@ int main(int argc, char **argv)
 
     std::string mode;
     nh.param<std::string>("run_mode", mode, "simulation");
-    /*
+
     ControlBase *ctr_obj;
 
     double Hz;
@@ -23,13 +24,13 @@ int main(int argc, char **argv)
 
     if(mode == "simulation")
     {
-        ROS_INFO("DYROS JET MAIN CONTROLLER - !!! SIMULATION MODE !!!");
+        ROS_INFO("DYROS CANARY MAIN CONTROLLER - !!! SIMULATION MODE !!!");
         ctr_obj = new SimulationInterface(nh, Hz);
     }
     else if(mode == "real_robot")
     {
-        ROS_INFO("DYROS JET MAIN CONTROLLER - !!! REAL ROBOT MODE !!!");
-        ctr_obj = new RealRobotInterface(nh, Hz);
+        ROS_INFO("DYROS CANARY MAIN CONTROLLER - !!! REAL ROBOT MODE !!!");
+        // ctr_obj = new RealRobotInterface(nh, Hz);
         //ROS_ERROR("REAL ROBOT MODE IS NOT IMPLEMENTED YET!!!");
     }
     else
@@ -52,7 +53,7 @@ int main(int argc, char **argv)
     }
 
     delete ctr_obj;
-    */
+
 
     return 0;
 }

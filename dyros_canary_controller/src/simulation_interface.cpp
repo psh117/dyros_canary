@@ -1,10 +1,10 @@
-#include "dyros_jet_controller/simulation_interface.h"
+#include "dyros_canary_controller/simulation_interface.h"
 
-namespace dyros_jet_controller
+namespace dyros_canary_controller
 {
 
-SimulationInterface::SimulationInterface(ros::NodeHandle &nh, double Hz):
-  ControlBase(nh, Hz), rate_(Hz), simulation_step_done_(false)
+SimulationInterface::SimulationInterface(ros::NodeHandle &nh, double hz):
+  ControlBase(nh, hz), rate_(hz), simulation_step_done_(false)
 {
   simulation_running_= true;
   simulation_time_ = 0.0f; // set initial simulation time
@@ -13,22 +13,19 @@ SimulationInterface::SimulationInterface(ros::NodeHandle &nh, double Hz):
   vrep_sim_stop_pub_ = nh.advertise<std_msgs::Bool>("/stopSimulation", 5);
   vrep_sim_step_trigger_pub_ = nh.advertise<std_msgs::Bool>("/triggerNextStep", 100);
   vrep_sim_enable_syncmode_pub_ = nh.advertise<std_msgs::Bool>("/enableSyncMode", 5);
-
-
   vrep_sim_step_done_sub_ = nh.subscribe("/simulationStepDone", 100, &SimulationInterface::simulationStepDoneCallback, this);
 
-  imu_sub_ = nh.subscribe("/vrep_ros_interface/imu", 100, &SimulationInterface::imuCallback, this);
+
   joint_sub_ = nh.subscribe("/vrep_ros_interface/joint_state", 100, &SimulationInterface::jointCallback, this);
-  left_ft_sub_ = nh.subscribe("/vrep_ros_interface/left_foot_ft", 100, &SimulationInterface::leftFTCallback, this);
-  right_ft_sub_ = nh.subscribe("/vrep_ros_interface/right_foot_ft", 100, &SimulationInterface::rightFTCallback, this);
 
   vrep_joint_set_pub_ = nh.advertise<sensor_msgs::JointState>("/vrep_ros_interface/joint_set", 1);
 
-  joint_set_msg_.name.resize(total_dof_);
-  joint_set_msg_.position.resize(total_dof_);
-  for(int i=0; i<total_dof_; i++)
+  joint_set_msg_.name.resize(DyrosCanaryModel::TOTAL_DOF);
+  joint_set_msg_.position.resize(DyrosCanaryModel::TOTAL_DOF);
+  joint_set_msg_.velocity.resize(DyrosCanaryModel::TOTAL_DOF);
+  for(int i=0; i<DyrosCanaryModel::TOTAL_DOF; i++)
   {
-    joint_set_msg_.name[i] = DyrosJetModel::JOINT_NAME[i];
+    joint_set_msg_.name[i] = DyrosCanaryModel::JOINT_NAME[i];
   }
   ros::Rate poll_rate(100);
 
@@ -87,8 +84,13 @@ void SimulationInterface::compute()
 void SimulationInterface::writeDevice()
 {
 
-  for(int i=0;i<total_dof_;i++) {
+  for(int i=0;i<DyrosCanaryModel::TOTAL_DOF;i++)
+  {
     joint_set_msg_.position[i] = desired_q_(i);
+  }
+  for(int i=0; i<DyrosCanaryModel::MOBILE_BASE_DOF; i++)
+  {
+    joint_set_msg_.velocity[i] = desired_q_dot_(i);
   }
 
   if(!is_first_boot_)
@@ -126,40 +128,20 @@ void SimulationInterface::simulationStepDoneCallback(const std_msgs::BoolConstPt
 
 void SimulationInterface::jointCallback(const sensor_msgs::JointStateConstPtr& msg)
 {
-  for(int i=0; i<total_dof_; i++)
+  for (int i=0; i<msg->name.size(); i++)
   {
-    for (int j=0; j<msg->name.size(); j++)
-    {
-      if(DyrosJetModel::JOINT_NAME[i] == msg->name[j].data())
-      {
-        q_(i) = msg->position[j];
-        if(is_first_boot_)
-        {
-          desired_q_(i) = msg->position[j];
-        }
+    int index = model_.getIndex(msg->name[i]);
+    q_(index) = msg->position[i];
+    q_dot_(index) = msg->velocity[i];
+    torque_(index) = msg->effort[i];
 
-        q_dot_(i) = msg->velocity[j];
-        torque_(i) = msg->effort[j];
-      }
+    if (is_first_boot_)
+    {
+      desired_q_(index) = q_(index);
     }
   }
   if(is_first_boot_)
   {is_first_boot_ = false;}
-}
-
-void SimulationInterface::leftFTCallback(const geometry_msgs::WrenchStampedConstPtr& msg)
-{
-
-}
-
-void SimulationInterface::rightFTCallback(const geometry_msgs::WrenchStampedConstPtr& msg)
-{
-
-}
-
-void SimulationInterface::imuCallback(const sensor_msgs::ImuConstPtr &msg)
-{
-
 }
 
 }
