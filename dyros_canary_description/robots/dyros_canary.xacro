@@ -1,0 +1,14 @@
+<robot name="dyros_canary" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="laser_enabled" default="false"/>
+  <xacro:arg name="ur5_enabled" default="false"/>
+  <xacro:arg name="kinect_enabled" default="false"/>
+  <xacro:include filename="$(find husky_description)/urdf/husky.urdf.xacro"/>
+	<xacro:include filename="$(find franka_description)/robots/panda_arm.xacro"/>
+  <xacro:include filename="$(find franka_description)/robots/hand.xacro"/>
+  <xacro:husky_robot/>
+  <xacro:panda_arm arm_id='panda_left' connected_to="top_plate_link" xyz="0.25 -0.20 0.0065" rpy="0.0 0.0 ${-pi/2}"/>
+  <xacro:panda_arm arm_id='panda_right' connected_to="top_plate_link" xyz="0.25 0.20 0.0065" rpy="0.0 0.0 ${+pi/2}"/>
+  <xacro:hand ns="panda_left" rpy="0 0 ${-pi/4}" connected_to="panda_left_link8"/>
+  <xacro:hand ns="panda_right" rpy="0 0 ${-pi/4}" connected_to="panda_right_link8"/>
+</robot>
+
